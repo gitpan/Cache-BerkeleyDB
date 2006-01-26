@@ -1,0 +1,78 @@
+NAME
+    Cache::BerkeleyDB -- implements the Cache interface.
+
+DESCRIPTION
+    This module implements the Cache interface provided by the Cache::Cache
+    family of modules written by DeWitt Clinton. It provides a practically
+    drop-in replacement for Cache::FileCache.
+
+    As should be obvious from the name, the backend is based on BerkeleyDB.
+
+SYNOPSIS
+      use Cache::BerkeleyDB;
+
+      my $cache = new Cache::BerkeleyDB( { 'namespace' => 'MyNamespace',
+                                           'default_expires_in' => 600 } );
+
+      See Cache::Cache for the usage synopsis.
+
+METHODS
+    See Cache::Cache for the API documentation.
+
+    Clear( [$cache_root] )
+        See Cache::Cache, with the optional *$cache_root* parameter.
+
+    Purge( [$cache_root] )
+        See Cache::Cache, with the optional *$cache_root* parameter.
+
+    Size( [$cache_root] )
+        See Cache::Cache, with the optional *$cache_root* parameter.
+
+OPTIONS
+    See Cache::Cache for standard options. Additionally, options are set by
+    passing in a reference to a hash containing the following key:
+
+    *cache_root*
+        The location in the filesystem that will hold the BDB files
+        representing the cache namespaces. Defaults to /tmp unless
+        explicitly set.
+
+PROPERTIES
+    See Cache::Cache for default properties.
+
+    (get|set)_cache_root
+        See the definition above for the option *cache_root*
+
+SEE ALSO
+    Cache::Cache
+    Cache::FileCache
+    BerkeleyDB
+    Cache::BerkeleyDB_Backend
+
+TODO
+    (1) The current version (0.01) uses the framework provided by the
+    Cache::Cache family of modules quite heavily. In particular, it relies
+    on Cache::BaseCache and Cache::Object for much of its functionality.
+    This has obvious advantages; it means, however, that the extra speed
+    gained by switching from the flat files of Cache::FileCache to a
+    BerkeleyDB backend is much reduced compared with a top-to-bottom
+    implementation utilizing the latter's strengths to the full. Currently
+    the speed gain relative to Cache::FileCache is in the range of 200% to
+    350%; I'm confident this can be increased significantly.
+
+    (2) Since each cache namespace is represented as a separate BDB file,
+    operating with (very) many namespaces in the same process may get you in
+    trouble. While this has not been verified yet, it may make this version
+    unsuitable for some uses, such as in an HTML::Mason environment under
+    mod_perl. Future versions will probably implement multiple namespaces in
+    the same file.
+
+    (3) The current version is Unix-specific. That will probably change.
+
+AUTHOR
+    Baldur Kristinsson <bk@mbl.is>, January 2006.
+
+     Copyright (c) 2006 Baldur Kristinsson. All rights reserved.
+     This program is free software; you can redistribute it and/or
+     modify it under the same terms as Perl itself.
+
