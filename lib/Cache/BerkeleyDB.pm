@@ -1,6 +1,6 @@
 package Cache::BerkeleyDB;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use strict;
 use vars qw( @ISA );
@@ -12,8 +12,8 @@ use Cache::BerkeleyDB_Backend;
 @ISA = qw ( Cache::BaseCache );
 
 my $DEFAULT_CACHE_ROOT   = "/tmp";
-my $CACHE_FILE_EXTENSION = 'bdbcache';
 my $DEFAULT_NAMESPACE    = 'Default';
+my $DEFAULT_UMASK        = 0002;
 
 sub Clear {
 	my ($self,$cache_root) = _chkparm(@_);
@@ -54,14 +54,17 @@ sub new {
 	my ($class, $opt) = @_;
 	$opt ||= {};
 	$opt->{cache_root} ||= $DEFAULT_CACHE_ROOT;
-	mkdir $opt->{cache_root}, 0777 unless -d $opt->{cache_root};
 	$opt->{namespace} ||= $DEFAULT_NAMESPACE;
+	$opt->{umask} ||= $DEFAULT_UMASK;
 	$class = ref $class if ref $class;
 	my $self = $class->SUPER::_new( $opt );
+	my $normal_umask = umask($opt->{umask});
+	mkdir $opt->{cache_root}, 0777 unless -d $opt->{cache_root};
 	$self->_set_backend(
 						Cache::BerkeleyDB_Backend->new
 						  ( $opt->{cache_root}, $opt->{namespace} )
 					   );
+	umask($normal_umask);
 	$self->_complete_initialization;
 	return $self;
 }
@@ -105,7 +108,7 @@ __END__
 
 =head1 NAME
 
-Cache::BerkeleyDB -- implements the Cache interface.
+Cache::BerkeleyDB -- implements the Cache::Cache interface.
 
 =head1 DESCRIPTION
 
@@ -148,8 +151,8 @@ See Cache::Cache, with the optional I<$cache_root> parameter.
 =head1 OPTIONS
 
 See Cache::Cache for standard options.  Additionally, options are set
-by passing in a reference to a hash containing the following
-key:
+by passing in a reference to a hash containing any of the following
+keys:
 
 =over
 
@@ -158,6 +161,11 @@ key:
 The location in the filesystem that will hold the BDB files
 representing the cache namespaces.  Defaults to /tmp unless explicitly
 set.
+
+=item I<umask>
+
+The umask which will be active when any cache files are created.
+Defaults to 002.
 
 =back
 
@@ -189,7 +197,7 @@ See the definition above for the option I<cache_root>
 
 =head1 TODO
 
-(1) The current version (0.01) uses the framework provided by the
+(1) The current version (0.02) uses the framework provided by the
 Cache::Cache family of modules quite heavily. In particular, it relies
 on Cache::BaseCache and Cache::Object for much of its
 functionality. This has obvious advantages; it means, however, that

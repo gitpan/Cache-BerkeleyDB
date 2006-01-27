@@ -1,6 +1,6 @@
 package Cache::BerkeleyDB_Backend;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use strict;
 use Storable qw(freeze thaw);
@@ -28,15 +28,15 @@ sub _initial_tie {
 	return $Caches->{$namespace} if $Caches->{$namespace};
 	my %cache = ();
 	my $env = new BerkeleyDB::Env(
-								  -Home => '/tmp',
+								  -Home => $root,
 								  -Flags => DB_INIT_CDB | DB_CREATE | DB_INIT_MPOOL,
 								 )
-	  or die "can't create BerkeleyDB::Env: $!";
+	  or die "Can't create BerkeleyDB::Env (home=$root): $BerkeleyDB::Error";
 	my $fn = "$root/$namespace.bdbcache";
 	my $obj = tie %cache, 'BerkeleyDB::Btree',
 	  -Filename => $fn,
 	  -Flags    => DB_CREATE,
-	  -Mode     => 0000,
+	  -Mode     => 0666,
 	  -Env      => $env
 		or die "Can't tie to $root/$namespace.bdbcache";
 	$Caches->{$namespace} = {};
@@ -58,7 +58,7 @@ sub _retie {
 	my ($self, $namespace) = @_;
 	$namespace ||= 'Default';
 	return if $namespace eq $self->{_namespace};
-	my $obj = _initial_tie($self->{root},$namespace);
+	my $obj = _initial_tie($self->{_cache_root},$namespace);
 	$self->{_filename} = $obj->{filename};
 	$self->{_namespace} = $namespace;
 }
