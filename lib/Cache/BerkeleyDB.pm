@@ -1,6 +1,6 @@
 package Cache::BerkeleyDB;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use strict;
 use vars qw( @ISA );
@@ -130,7 +130,8 @@ BerkeleyDB.
 
 =head1 METHODS
 
-See Cache::Cache for the API documentation.
+See Cache::Cache for the API documentation. Only changes relative to
+the standard methods are mentioned below.
 
 =over
 
@@ -165,7 +166,7 @@ set.
 =item I<umask>
 
 The umask which will be active when any cache files are created.
-Defaults to 002.
+Defaults to 002. Note that this will have no effect on existing files.
 
 =back
 
@@ -177,7 +178,7 @@ See Cache::Cache for default properties.
 
 =item B<(get|set)_cache_root>
 
-See the definition above for the option I<cache_root>
+Acessor pair for the option I<cache_root> - see description above.
 
 =back
 
@@ -197,7 +198,7 @@ See the definition above for the option I<cache_root>
 
 =head1 TODO
 
-(1) The current version (0.02) uses the framework provided by the
+(1) The current version (0.03) uses the framework provided by the
 Cache::Cache family of modules quite heavily. In particular, it relies
 on Cache::BaseCache and Cache::Object for much of its
 functionality. This has obvious advantages; it means, however, that

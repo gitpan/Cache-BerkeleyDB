@@ -1,6 +1,6 @@
 package Cache::BerkeleyDB_Backend;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use strict;
 use Storable qw(freeze thaw);
@@ -26,21 +26,19 @@ sub _initial_tie {
 	$root ||= '/tmp';
 	$namespace ||= 'Default';
 	return $Caches->{$namespace} if $Caches->{$namespace};
-	my %cache = ();
 	my $env = new BerkeleyDB::Env(
 								  -Home => $root,
 								  -Flags => DB_INIT_CDB | DB_CREATE | DB_INIT_MPOOL,
 								 )
 	  or die "Can't create BerkeleyDB::Env (home=$root): $BerkeleyDB::Error";
 	my $fn = "$root/$namespace.bdbcache";
-	my $obj = tie %cache, 'BerkeleyDB::Btree',
+	my $obj = BerkeleyDB::Btree->new(
 	  -Filename => $fn,
 	  -Flags    => DB_CREATE,
 	  -Mode     => 0666,
-	  -Env      => $env
+	  -Env      => $env, )
 		or die "Can't tie to $root/$namespace.bdbcache";
 	$Caches->{$namespace} = {};
-	$Caches->{$namespace}->{cache}     = \%cache;
 	$Caches->{$namespace}->{obj}       = $obj;
 	$Caches->{$namespace}->{filename}  = $fn;
 	$Caches->{$namespace}->{namespace} = $namespace;
@@ -95,7 +93,15 @@ sub delete_namespace {
 sub get_keys {
 	my ($self, $namespace) = @_;
 	$self->_retie($namespace);
-	return keys %{ $Caches->{ $self->{_namespace} }->{cache} };
+	my $db = $Caches->{ $self->{_namespace} }->{obj};
+	my ($k,$v) = ('','');
+	my @keys = ();
+	my $cursor = $db->db_cursor();
+	while ($cursor->c_get($k, $v, DB_NEXT) == 0) {
+		push @keys, $k;
+	}
+	undef $cursor;
+	return @keys;
 }
 
 sub get_namespaces {
